@@ -2,6 +2,15 @@
 
 A new Flutter project.
 Contributor: Anas Raza
+## 🚀 Features & Updates
+- **Preset Signatures**: Added customizable pre-defined signature templates (Official, Personal, Initials).
+- **Smooth Canvas**: Integrated fast drawing gesture canvas with dynamic stroke width & color palette.
+- **Digital Stamp & Export**: Allows digital signature storage and preview capabilities.
+
+## 🛠️ Tech Stack & Architecture
+- **Framework**: Flutter (Dart)
+- **State Management**: ChangeNotifier / ValueNotifier
+- **UI Components**: Material Design 3
 
 ## Getting Started
 
