@@ -1,7 +1,7 @@
 # signature_maker_app
 
 A new Flutter project.
-Contributor: Anas Raza
+Contributor: Anas Raza, Hassan Mehmood
 
 ## Getting Started
 
