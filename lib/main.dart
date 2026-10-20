@@ -19,6 +19,13 @@ class SignatureStore extends ChangeNotifier {
       color: Colors.indigo,
     ),
     SavedSignature(
+      id: '5',
+      title: 'Personal Contract Signature',
+      date: 'Today, 2:30 PM',
+      category: 'Personal',
+      color: Colors.teal,
+    ),
+    SavedSignature(
       id: '2',
       title: 'Bank & Loan Documents',
       date: 'Yesterday, 3:15 PM',
