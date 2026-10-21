@@ -385,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF4F46E5)),
-                            hintText: 'e.g. sirajahmad546@gmail.com',
+                            hintText: 'e.g. xyze786@gmail.com',
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -558,7 +558,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           controller: _nameController,
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.person_outline_rounded, color: Color(0xFF7C3AED)),
-                            hintText: 'e.g. Siraj Ahmad',
+                            hintText: 'e.g. abc...',
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -572,7 +572,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF7C3AED)),
-                            hintText: 'e.g. sirajahmad546@gmail.com',
+                            hintText: 'e.g. xyze786@gmail.com',
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
