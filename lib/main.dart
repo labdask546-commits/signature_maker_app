@@ -25,12 +25,17 @@ class AuthStore extends ChangeNotifier {
   AuthStore._();
 
   UserAccount? _currentUser = UserAccount(
-    name: 'Siraj Ahmad',
-    email: 'sirajahmad546@gmail.com',
+    name: 'Muhammad Anas Raza',
+    email: 'muhammadanasraza@gmail.com',
     password: '123',
   );
 
   final List<UserAccount> _registeredUsers = [
+    UserAccount(
+      name: 'Muhammad Anas Raza',
+      email: 'muhammadanasraza@gmail.com',
+      password: '123',
+    ),
     UserAccount(
       name: 'Siraj Ahmad',
       email: 'sirajahmad546@gmail.com',
@@ -302,7 +307,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(text: 'sirajahmad546@gmail.com');
+  final TextEditingController _emailController = TextEditingController(text: 'muhammadanasraza@gmail.com');
   final TextEditingController _passwordController = TextEditingController(text: '123');
   bool _obscurePassword = true;
 
@@ -749,8 +754,8 @@ class HomeScreen extends StatelessWidget {
               child: const Icon(Icons.person_rounded, size: 48, color: Color(0xFF4F46E5)),
             ),
             const SizedBox(height: 12),
-            Text(user?.name ?? 'Siraj Ahmad', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text(user?.email ?? 'sirajahmad546@gmail.com', style: TextStyle(color: Colors.grey.shade600)),
+            Text(user?.name ?? 'Muhammad Anas Raza', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(user?.email ?? 'muhammadanasraza@gmail.com', style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -838,7 +843,7 @@ class HomeScreen extends StatelessWidget {
                 child: Text(
                   (AuthStore.instance.currentUser?.name.isNotEmpty ?? false)
                       ? AuthStore.instance.currentUser!.name[0].toUpperCase()
-                      : 'S',
+                      : 'M',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
                 ),
               ),
@@ -850,7 +855,7 @@ class HomeScreen extends StatelessWidget {
         listenable: SignatureStore.instance,
         builder: (context, _) {
           final recentSigs = SignatureStore.instance.signatures;
-          final userName = AuthStore.instance.currentUser?.name ?? 'Siraj Ahmad';
+          final userName = AuthStore.instance.currentUser?.name ?? 'Muhammad Anas Raza';
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
