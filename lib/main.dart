@@ -24,27 +24,25 @@ class AuthStore extends ChangeNotifier {
   static final AuthStore instance = AuthStore._();
   AuthStore._();
 
-  UserAccount? _currentUser = UserAccount(
-    name: 'Muhammad Anas Raza',
-    email: 'muhammadanasraza@gmail.com',
-    password: '123',
-  );
+  // Always null on app startup like Banking apps
+  UserAccount? _currentUser;
 
   final List<UserAccount> _registeredUsers = [
     UserAccount(
-      name: 'Muhammad Anas Raza',
-      email: 'muhammadanasraza@gmail.com',
+      name: 'Siraj Ahmad',
+      email: 'sirajahmad546@gmail.com',
       password: '123',
     ),
     UserAccount(
-      name: 'Siraj Ahmad',
-      email: 'sirajahmad546@gmail.com',
+      name: 'Muhammad Anas Raza',
+      email: 'muhammadanasraza@gmail.com',
       password: '123',
     ),
   ];
 
   UserAccount? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
+  List<UserAccount> get registeredUsers => List.unmodifiable(_registeredUsers);
 
   String? register(String name, String email, String password) {
     if (name.trim().isEmpty || email.trim().isEmpty || password.trim().isEmpty) {
@@ -59,7 +57,8 @@ class AuthStore extends ChangeNotifier {
       password: password,
     );
     _registeredUsers.add(newUser);
-    _currentUser = newUser;
+    // Keep currentUser null so login password is mandatory on login screen
+    _currentUser = null;
     notifyListeners();
     return null; // Success
   }
@@ -223,14 +222,14 @@ class SplashScreen extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(28),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black12,
                       blurRadius: 25,
-                      offset: const Offset(0, 10),
+                      offset: Offset(0, 10),
                     )
                   ],
                 ),
@@ -252,7 +251,7 @@ class SplashScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Colorful • Fast • Professional Digital Signatures',
+                'Colorful • Fast • Banking-Grade Secure Signatures',
                 style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 52),
@@ -267,17 +266,11 @@ class SplashScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  if (AuthStore.instance.isLoggedIn) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-                    );
-                  } else {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    );
-                  }
+                  // Always require Login on launch like Banking Apps
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
                 },
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -297,19 +290,33 @@ class SplashScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 5. LOGIN SCREEN
+// 5. LOGIN SCREEN (BANKING APP SECURITY MODEL)
 // ==========================================
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  final String initialEmail;
+  const LoginScreen({Key? key, this.initialEmail = 'sirajahmad546@gmail.com'}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(text: 'muhammadanasraza@gmail.com');
-  final TextEditingController _passwordController = TextEditingController(text: '123');
+  late TextEditingController _emailController;
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _handleLogin() {
     final email = _emailController.text;
@@ -323,8 +330,8 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Welcome back, ${AuthStore.instance.currentUser?.name}! 🎉'),
-          backgroundColor: Colors.green,
+          content: Text('Access Granted! Welcome, ${AuthStore.instance.currentUser?.name}! 🔒'),
+          backgroundColor: Colors.green.shade700,
         ),
       );
       Navigator.pushReplacement(
@@ -336,6 +343,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final registeredList = AuthStore.instance.registeredUsers;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -352,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // App Icon Header
+                  // App Security Shield Header
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -360,18 +369,53 @@ class _LoginScreenState extends State<LoginScreen> {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white24, width: 2),
                     ),
-                    child: const Icon(Icons.lock_person_rounded, size: 54, color: Colors.white),
+                    child: const Icon(Icons.shield_outlined, size: 54, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Welcome Back!',
+                    '🔒 Secure Bank Login',
                     style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const Text(
-                    'Sign in to access your digital signatures',
+                    'Authentication required to open application',
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+                  // Quick Account Selector Chips
+                  if (registeredList.isNotEmpty) ...[
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Select Saved Account:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: registeredList.map((user) {
+                          final isSelected = _emailController.text.trim().toLowerCase() == user.email.toLowerCase();
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ActionChip(
+                              avatar: CircleAvatar(
+                                backgroundColor: isSelected ? const Color(0xFF4F46E5) : Colors.grey.shade300,
+                                child: Text(user.name[0], style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                              label: Text(user.name),
+                              backgroundColor: isSelected ? Colors.white : Colors.white.withOpacity(0.85),
+                              labelStyle: TextStyle(color: isSelected ? const Color(0xFF4F46E5) : Colors.black87, fontWeight: FontWeight.bold),
+                              onPressed: () {
+                                setState(() {
+                                  _emailController.text = user.email;
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Login Form Card
                   Container(
@@ -419,7 +463,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               },
                             ),
-                            hintText: 'Enter password',
+                            hintText: 'Enter account password',
                             filled: true,
                             fillColor: const Color(0xFFF8FAFC),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
@@ -437,7 +481,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               elevation: 4,
                             ),
                             onPressed: _handleLogin,
-                            child: const Text('Sign In →', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                            child: const Text('Unlock App →', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
@@ -449,7 +493,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? ", style: TextStyle(color: Colors.white70, fontSize: 15)),
+                      const Text("Need a new account? ", style: TextStyle(color: Colors.white70, fontSize: 15)),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -511,12 +555,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully! 🎉'), backgroundColor: Colors.green),
+        const SnackBar(content: Text('Account registered! Enter your password to login. 🎉'), backgroundColor: Colors.green),
       );
-      Navigator.pushAndRemoveUntil(
+      // Redirect to Login Screen so user logs in with credentials
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-        (route) => false,
+        MaterialPageRoute(builder: (context) => LoginScreen(initialEmail: email.trim().toLowerCase())),
       );
     }
   }
@@ -634,7 +678,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               elevation: 4,
                             ),
                             onPressed: _handleRegister,
-                            child: const Text('Register & Start →', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                            child: const Text('Register & Proceed to Login →', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
@@ -754,8 +798,8 @@ class HomeScreen extends StatelessWidget {
               child: const Icon(Icons.person_rounded, size: 48, color: Color(0xFF4F46E5)),
             ),
             const SizedBox(height: 12),
-            Text(user?.name ?? 'Muhammad Anas Raza', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            Text(user?.email ?? 'muhammadanasraza@gmail.com', style: TextStyle(color: Colors.grey.shade600)),
+            Text(user?.name ?? 'Siraj Ahmad', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(user?.email ?? 'sirajahmad546@gmail.com', style: TextStyle(color: Colors.grey.shade600)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -843,7 +887,7 @@ class HomeScreen extends StatelessWidget {
                 child: Text(
                   (AuthStore.instance.currentUser?.name.isNotEmpty ?? false)
                       ? AuthStore.instance.currentUser!.name[0].toUpperCase()
-                      : 'M',
+                      : 'S',
                   style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
                 ),
               ),
@@ -855,7 +899,7 @@ class HomeScreen extends StatelessWidget {
         listenable: SignatureStore.instance,
         builder: (context, _) {
           final recentSigs = SignatureStore.instance.signatures;
-          final userName = AuthStore.instance.currentUser?.name ?? 'Muhammad Anas Raza';
+          final userName = AuthStore.instance.currentUser?.name ?? 'Siraj Ahmad';
 
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
