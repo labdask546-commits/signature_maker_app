@@ -1805,7 +1805,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_back_outlined, color: Colors.emerald),
+              leading: const Icon(Icons.photo_camera_back_outlined, color: Color(0xFF10B981)),
               title: const Text('Certificate_Photo_Scan.jpg (1.2 MB)'),
               onTap: () {
                 setState(() {
