@@ -80,6 +80,26 @@ class AuthStore extends ChangeNotifier {
     return null; // Success
   }
 
+  String? resetPassword(String email, String newPassword) {
+    if (email.trim().isEmpty || newPassword.trim().isEmpty) {
+      return 'Please fill in all fields!';
+    }
+    final index = _registeredUsers.indexWhere(
+      (u) => u.email.toLowerCase() == email.trim().toLowerCase(),
+    );
+    if (index == -1) {
+      return 'No registered account found with this email!';
+    }
+    final old = _registeredUsers[index];
+    _registeredUsers[index] = UserAccount(
+      name: old.name,
+      email: old.email,
+      password: newPassword,
+    );
+    notifyListeners();
+    return null; // Success
+  }
+
   void logout() {
     _currentUser = null;
     notifyListeners();
@@ -96,6 +116,7 @@ class SavedSignature {
   final String category;
   final Color color;
   final List<DrawnStroke> strokes;
+  final String? galleryImageName;
 
   SavedSignature({
     required this.id,
@@ -104,6 +125,7 @@ class SavedSignature {
     required this.category,
     required this.color,
     this.strokes = const [],
+    this.galleryImageName,
   });
 }
 
@@ -135,23 +157,17 @@ class SignatureStore extends ChangeNotifier {
     ),
     SavedSignature(
       id: '3',
-      title: 'Personal Freelance Stamp',
+      title: 'Gallery Picked Scan',
       date: '2 days ago',
       category: 'Personal',
       color: const Color(0xFFE11D48),
-    ),
-    SavedSignature(
-      id: '4',
-      title: 'Quick Initials J.D.',
-      date: '3 days ago',
-      category: 'Initials',
-      color: const Color(0xFFD97706),
+      galleryImageName: 'Signature_Scan_Transparent.png',
     ),
   ];
 
   List<SavedSignature> get signatures => List.unmodifiable(_signatures);
 
-  void addSignature(String title, String category, Color color, List<DrawnStroke> strokes) {
+  void addSignature(String title, String category, Color color, List<DrawnStroke> strokes, {String? galleryImageName}) {
     final newSig = SavedSignature(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title.isEmpty ? 'Signature #${_signatures.length + 1}' : title,
@@ -159,6 +175,7 @@ class SignatureStore extends ChangeNotifier {
       category: category,
       color: color,
       strokes: strokes,
+      galleryImageName: galleryImageName,
     );
     _signatures.insert(0, newSig);
     notifyListeners();
@@ -290,7 +307,7 @@ class SplashScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 5. LOGIN SCREEN (BANKING APP SECURITY MODEL)
+// 5. LOGIN SCREEN (WITH FORGOT PASSWORD & BANK SECURITY)
 // ==========================================
 class LoginScreen extends StatefulWidget {
   final String initialEmail;
@@ -339,6 +356,111 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
       );
     }
+  }
+
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController(text: _emailController.text);
+    final newPasswordController = TextEditingController();
+    final otpController = TextEditingController(text: '7829');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_reset_rounded, color: Color(0xFF4F46E5), size: 28),
+            SizedBox(width: 10),
+            Text('Reset Password'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Registered Email Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: resetEmailController,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  hintText: 'Enter registered email',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('Verification OTP Code (Auto-Sent)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.mark_email_read_outlined),
+                  hintText: 'OTP Code',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('New Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: newPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.lock_outline_rounded),
+                  hintText: 'Enter new password',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              final err = AuthStore.instance.resetPassword(
+                resetEmailController.text,
+                newPasswordController.text,
+              );
+              if (err != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(err), backgroundColor: Colors.redAccent),
+                );
+              } else {
+                Navigator.pop(context);
+                setState(() {
+                  _emailController.text = resetEmailController.text;
+                  _passwordController.text = newPasswordController.text;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Password updated successfully! Press Unlock to login.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text('Update Password'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -448,7 +570,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        const Text('Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+                            GestureDetector(
+                              onTap: _showForgotPasswordDialog,
+                              child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _passwordController,
@@ -1076,7 +1207,11 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: sig.color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
-                  child: Icon(Icons.gesture_rounded, color: sig.color, size: 26),
+                  child: Icon(
+                    sig.galleryImageName != null ? Icons.image_search_rounded : Icons.gesture_rounded,
+                    color: sig.color,
+                    size: 26,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Column(
@@ -1122,7 +1257,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 9. CREATE SIGNATURE SCREEN (COLORFUL & FAST)
+// 9. CREATE SIGNATURE SCREEN (WITH GALLERY IMPORT)
 // ==========================================
 class CreateSignatureScreen extends StatefulWidget {
   const CreateSignatureScreen({Key? key}) : super(key: key);
@@ -1138,6 +1273,7 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
   List<Offset> _currentPoints = [];
   final TextEditingController _titleController = TextEditingController(text: 'Official Executive Sign');
   String _selectedCategory = 'Official';
+  String? _galleryImageName;
 
   final List<Color> _palette = const [
     Color(0xFF4F46E5), // Indigo
@@ -1152,19 +1288,74 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
   void _clearCanvas() {
     _strokesNotifier.value = [];
     _currentPoints = [];
+    setState(() {
+      _galleryImageName = null;
+    });
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Canvas cleared')));
   }
 
+  void _pickFromGallery() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Pick Signature Photo from Gallery 🖼️', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.image_outlined, color: Color(0xFF4F46E5)),
+              title: const Text('Signature_Scan_Transparent.png'),
+              subtitle: const Text('High-res transparent PNG signature'),
+              onTap: () {
+                setState(() {
+                  _galleryImageName = 'Signature_Scan_Transparent.png';
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Picked signature image from Gallery! 🖼️')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_back_outlined, color: Colors.purple),
+              title: const Text('Photo_Stamp_Certificate.jpg'),
+              subtitle: const Text('Scanned document stamp photo'),
+              onTap: () {
+                setState(() {
+                  _galleryImageName = 'Photo_Stamp_Certificate.jpg';
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Picked signature image from Gallery! 🖼️')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _saveSignature() {
-    if (_strokesNotifier.value.isEmpty && _currentPoints.isEmpty) {
+    if (_strokesNotifier.value.isEmpty && _currentPoints.isEmpty && _galleryImageName == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please draw your signature first on the canvas!')),
+        const SnackBar(content: Text('Please draw or import a signature from Gallery first!')),
       );
       return;
     }
 
     final sigTitle = _titleController.text.trim();
-    SignatureStore.instance.addSignature(sigTitle, _selectedCategory, _selectedColor, _strokesNotifier.value);
+    SignatureStore.instance.addSignature(
+      sigTitle,
+      _selectedCategory,
+      _selectedColor,
+      _strokesNotifier.value,
+      galleryImageName: _galleryImageName,
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Signature saved successfully! 🎉')),
@@ -1245,6 +1436,23 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Import from Gallery Banner Button
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF4F46E5),
+                  side: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _pickFromGallery,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(_galleryImageName == null ? 'Pick Signature from Gallery 🖼️' : 'Picked: $_galleryImageName (Change)'),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // Drawing Canvas Area (RepaintBoundary for Smoothness)
             Container(
               height: 260,
@@ -1258,6 +1466,19 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
               ),
               child: Stack(
                 children: [
+                  if (_galleryImageName != null)
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.image_search_rounded, size: 64, color: _selectedColor),
+                          const SizedBox(height: 8),
+                          Text(_galleryImageName!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          const SizedBox(height: 4),
+                          const Text('Gallery Signature Image Loaded', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    ),
                   RepaintBoundary(
                     child: ValueListenableBuilder<List<DrawnStroke>>(
                       valueListenable: _strokesNotifier,
@@ -1508,7 +1729,11 @@ class MySignaturesScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: sig.color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)),
-                  child: Icon(Icons.gesture_rounded, color: sig.color, size: 30),
+                  child: Icon(
+                    sig.galleryImageName != null ? Icons.image_search_rounded : Icons.gesture_rounded,
+                    color: sig.color,
+                    size: 30,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Column(
@@ -1530,7 +1755,7 @@ class MySignaturesScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 11. SIGN PDF / IMAGE SCREEN
+// 11. SIGN PDF / IMAGE SCREEN (WITH GALLERY UPLOAD)
 // ==========================================
 class SignImageScreen extends StatefulWidget {
   const SignImageScreen({Key? key}) : super(key: key);
@@ -1543,7 +1768,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
   String _selectedFileName = 'Contract_Agreement.pdf';
   String _fileSize = '2.4 MB';
 
-  void _pickFile() {
+  void _pickFileFromGallery() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -1553,7 +1778,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Select Document Source', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Upload Document / Picture from Gallery 🖼️', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
@@ -1564,6 +1789,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
                   _fileSize = '2.4 MB';
                 });
                 Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Document uploaded from Gallery! 📄')));
               },
             ),
             ListTile(
@@ -1575,6 +1801,19 @@ class _SignImageScreenState extends State<SignImageScreen> {
                   _fileSize = '850 KB';
                 });
                 Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Image uploaded from Gallery! 🖼️')));
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_back_outlined, color: Colors.emerald),
+              title: const Text('Certificate_Photo_Scan.jpg (1.2 MB)'),
+              onTap: () {
+                setState(() {
+                  _selectedFileName = 'Certificate_Photo_Scan.jpg';
+                  _fileSize = '1.2 MB';
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Photo uploaded from Gallery! 🖼️')));
               },
             ),
           ],
@@ -1596,7 +1835,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
         child: Column(
           children: [
             GestureDetector(
-              onTap: _pickFile,
+              onTap: _pickFileFromGallery,
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -1611,7 +1850,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: const Color(0xFF4F46E5).withOpacity(0.1), borderRadius: BorderRadius.circular(14)),
-                      child: const Icon(Icons.insert_drive_file_rounded, color: Color(0xFF4F46E5), size: 36),
+                      child: const Icon(Icons.add_photo_alternate_rounded, color: Color(0xFF4F46E5), size: 36),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -1620,11 +1859,11 @@ class _SignImageScreenState extends State<SignImageScreen> {
                         children: [
                           Text(_selectedFileName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           const SizedBox(height: 4),
-                          Text('$_fileSize • Tap to change document', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                          Text('$_fileSize • Tap to pick from Gallery', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                         ],
                       ),
                     ),
-                    const Icon(Icons.swap_horiz_rounded, color: Color(0xFF4F46E5)),
+                    const Icon(Icons.cloud_upload_rounded, color: Color(0xFF4F46E5)),
                   ],
                 ),
               ),
@@ -1683,7 +1922,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
 }
 
 // ==========================================
-// 12. PREVIEW & EXPORT SCREEN
+// 12. PREVIEW & EXPORT SCREEN (WITH GALLERY DOWNLOAD)
 // ==========================================
 class PreviewScreen extends StatelessWidget {
   final SavedSignature signature;
@@ -1738,16 +1977,21 @@ class PreviewScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  if (signature.strokes.isNotEmpty)
+                  if (signature.galleryImageName != null) ...[
+                    Icon(Icons.image_search_rounded, size: 72, color: signature.color),
+                    const SizedBox(height: 8),
+                    Text(signature.galleryImageName!, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                  ] else if (signature.strokes.isNotEmpty) ...[
                     SizedBox(
                       height: 120,
                       width: double.infinity,
                       child: CustomPaint(
                         painter: FastSignaturePainter(strokes: signature.strokes),
                       ),
-                    )
-                  else
+                    ),
+                  ] else ...[
                     Icon(Icons.gesture_rounded, size: 80, color: signature.color),
+                  ],
                   const SizedBox(height: 16),
                   Text(signature.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
                   const SizedBox(height: 4),
@@ -1771,7 +2015,7 @@ class PreviewScreen extends StatelessWidget {
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Signature shared via WhatsApp / Email!')),
+                        const SnackBar(content: Text('Signature shared via WhatsApp / Email! 📲')),
                       );
                     },
                     icon: const Icon(Icons.share_rounded),
@@ -1790,7 +2034,7 @@ class PreviewScreen extends StatelessWidget {
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Downloaded signature as high-res PNG')),
+                        const SnackBar(content: Text('Downloaded signature picture to Gallery! 📥')),
                       );
                     },
                     icon: const Icon(Icons.download_rounded),
@@ -1813,11 +2057,11 @@ class PreviewScreen extends StatelessWidget {
                 ),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Saved to Gallery! 🎉')),
+                    const SnackBar(content: Text('Saved picture to Gallery! 🎉')),
                   );
                   Navigator.popUntil(context, (route) => route.isFirst);
                 },
-                child: const Text('Save to Gallery & Finish', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('Save Picture to Gallery & Finish', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
