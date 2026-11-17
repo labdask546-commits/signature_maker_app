@@ -38,6 +38,11 @@ class AuthStore extends ChangeNotifier {
       email: 'muhammadanasraza@gmail.com',
       password: '123',
     ),
+    UserAccount(
+      name: 'Hassan Mehmood',
+      email: 'Mahmoodrai826@gmail.com',
+      password: '1234',
+    ),
   ];
 
   UserAccount? get currentUser => _currentUser;
