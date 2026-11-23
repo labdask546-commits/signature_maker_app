@@ -24,7 +24,6 @@ class AuthStore extends ChangeNotifier {
   static final AuthStore instance = AuthStore._();
   AuthStore._();
 
-  // Always null on app startup like Banking apps
   UserAccount? _currentUser;
 
   final List<UserAccount> _registeredUsers = [
@@ -51,7 +50,7 @@ class AuthStore extends ChangeNotifier {
 
   String? register(String name, String email, String password) {
     if (name.trim().isEmpty || email.trim().isEmpty || password.trim().isEmpty) {
-      return 'Please fill in all fields!';
+      return 'Please fill in all required fields!';
     }
     if (_registeredUsers.any((u) => u.email.toLowerCase() == email.trim().toLowerCase())) {
       return 'An account with this email already exists!';
@@ -62,10 +61,9 @@ class AuthStore extends ChangeNotifier {
       password: password,
     );
     _registeredUsers.add(newUser);
-    // Keep currentUser null so login password is mandatory on login screen
     _currentUser = null;
     notifyListeners();
-    return null; // Success
+    return null;
   }
 
   String? login(String email, String password) {
@@ -82,7 +80,7 @@ class AuthStore extends ChangeNotifier {
 
     _currentUser = matches.first;
     notifyListeners();
-    return null; // Success
+    return null;
   }
 
   String? resetPassword(String email, String newPassword) {
@@ -102,7 +100,7 @@ class AuthStore extends ChangeNotifier {
       password: newPassword,
     );
     notifyListeners();
-    return null; // Success
+    return null;
   }
 
   void logout() {
@@ -112,7 +110,7 @@ class AuthStore extends ChangeNotifier {
 }
 
 // ==========================================
-// 2. SIGNATURE DATA & STORE MANAGER
+// 2. SIGNATURE STORE MANAGER
 // ==========================================
 class SavedSignature {
   final String id;
@@ -193,7 +191,7 @@ class SignatureStore extends ChangeNotifier {
 }
 
 // ==========================================
-// 3. MAIN APPLICATION & COLORFUL THEME
+// 3. MAIN APPLICATION & MATERIAL 3 THEME
 // ==========================================
 class SignatureMakerApp extends StatelessWidget {
   const SignatureMakerApp({Key? key}) : super(key: key);
@@ -273,7 +271,7 @@ class SplashScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Colorful • Fast • Banking-Grade Secure Signatures',
+                'Play Store Edition • Fast • Secure Signatures',
                 style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 52),
@@ -288,7 +286,6 @@ class SplashScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  // Always require Login on launch like Banking Apps
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -312,7 +309,7 @@ class SplashScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 5. LOGIN SCREEN (WITH FORGOT PASSWORD & BANK SECURITY)
+// 5. LOGIN SCREEN (BANKING APP SECURITY MODEL)
 // ==========================================
 class LoginScreen extends StatefulWidget {
   final String initialEmail;
@@ -488,7 +485,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // App Security Shield Header
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -509,7 +505,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Quick Account Selector Chips
                   if (registeredList.isNotEmpty) ...[
                     const Align(
                       alignment: Alignment.centerLeft,
@@ -544,7 +539,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Login Form Card
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -625,7 +619,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Register Toggle Button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -693,7 +686,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account registered! Enter your password to login. 🎉'), backgroundColor: Colors.green),
       );
-      // Redirect to Login Screen so user logs in with credentials
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen(initialEmail: email.trim().toLowerCase())),
@@ -1043,7 +1035,6 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // User Greeting Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1058,7 +1049,6 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Colorful Banner Widget
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -1105,7 +1095,6 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Quick Action Cards
                 Row(
                   children: [
                     Expanded(
@@ -1161,7 +1150,6 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Recent Signatures Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1212,7 +1200,11 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: sig.color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
-                  child: Icon(Icons.gesture_rounded, color: sig.color, size: 26),
+                  child: Icon(
+                    sig.galleryImageName != null ? Icons.image_search_rounded : Icons.gesture_rounded,
+                    color: sig.color,
+                    size: 26,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Column(
@@ -1258,7 +1250,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 9. CREATE SIGNATURE SCREEN (WITH GALLERY IMPORT)
+// 9. CREATE SIGNATURE SCREEN (WITH UNDO/REDO & GALLERY IMPORT)
 // ==========================================
 class CreateSignatureScreen extends StatefulWidget {
   const CreateSignatureScreen({Key? key}) : super(key: key);
@@ -1269,6 +1261,7 @@ class CreateSignatureScreen extends StatefulWidget {
 
 class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
   final ValueNotifier<List<DrawnStroke>> _strokesNotifier = ValueNotifier([]);
+  final List<DrawnStroke> _redoStrokes = [];
   Color _selectedColor = const Color(0xFF4F46E5);
   double _strokeWidth = 4.0;
   List<Offset> _currentPoints = [];
@@ -1288,11 +1281,30 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
 
   void _clearCanvas() {
     _strokesNotifier.value = [];
+    _redoStrokes.clear();
     _currentPoints = [];
     setState(() {
       _galleryImageName = null;
     });
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Canvas cleared')));
+  }
+
+  void _undoStroke() {
+    if (_strokesNotifier.value.isNotEmpty) {
+      final updated = List<DrawnStroke>.from(_strokesNotifier.value);
+      final popped = updated.removeLast();
+      _redoStrokes.add(popped);
+      _strokesNotifier.value = updated;
+    }
+  }
+
+  void _redoStroke() {
+    if (_redoStrokes.isNotEmpty) {
+      final updated = List<DrawnStroke>.from(_strokesNotifier.value);
+      final restored = _redoStrokes.removeLast();
+      updated.add(restored);
+      _strokesNotifier.value = updated;
+    }
   }
 
   void _pickFromGallery() {
@@ -1388,6 +1400,16 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
         elevation: 0.5,
         actions: [
           IconButton(
+            icon: const Icon(Icons.undo_rounded, color: Colors.black87),
+            tooltip: 'Undo',
+            onPressed: _undoStroke,
+          ),
+          IconButton(
+            icon: const Icon(Icons.redo_rounded, color: Colors.black87),
+            tooltip: 'Redo',
+            onPressed: _redoStroke,
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Colors.black87),
             tooltip: 'Clear Canvas',
             onPressed: _clearCanvas,
@@ -1400,7 +1422,6 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title & Category Selection
             TextField(
               controller: _titleController,
               decoration: InputDecoration(
@@ -1414,7 +1435,6 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 14),
 
-            // Category Selector Chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -1437,7 +1457,6 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Import from Gallery Banner Button
             SizedBox(
               width: double.infinity,
               height: 46,
@@ -1454,7 +1473,7 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Drawing Canvas Area (RepaintBoundary for Smoothness)
+            // Canvas Box with Smooth Vector Painting
             Container(
               height: 260,
               decoration: BoxDecoration(
@@ -1486,6 +1505,7 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
                       builder: (context, strokes, _) {
                         return GestureDetector(
                           onPanStart: (details) {
+                            _redoStrokes.clear();
                             _currentPoints = [details.localPosition];
                           },
                           onPanUpdate: (details) {
@@ -1548,7 +1568,6 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Color Selection Palette
             const Text('Ink Color Palette:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 10),
             Row(
@@ -1557,7 +1576,6 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Stroke Thickness Slider
             Row(
               children: [
                 const Text('Thickness:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -1575,7 +1593,6 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Save Signature Button
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -1616,7 +1633,7 @@ class _CreateSignatureScreenState extends State<CreateSignatureScreen> {
   }
 }
 
-// Drawn Stroke Model & Painter
+// Smooth Bézier Curve Vector Signature Painter
 class DrawnStroke {
   final List<Offset> points;
   final Color color;
@@ -1653,8 +1670,12 @@ class FastSignaturePainter extends CustomPainter {
       } else {
         final path = Path();
         path.moveTo(stroke.points.first.dx, stroke.points.first.dy);
-        for (int i = 1; i < stroke.points.length; i++) {
-          path.lineTo(stroke.points[i].dx, stroke.points[i].dy);
+        for (int i = 0; i < stroke.points.length - 1; i++) {
+          final p0 = stroke.points[i];
+          final p1 = stroke.points[i + 1];
+          final midX = (p0.dx + p1.dx) / 2;
+          final midY = (p0.dy + p1.dy) / 2;
+          path.quadraticBezierTo(p0.dx, p0.dy, midX, midY);
         }
         canvas.drawPath(path, paint);
       }
@@ -1666,10 +1687,18 @@ class FastSignaturePainter extends CustomPainter {
 }
 
 // ==========================================
-// 10. MY SIGNATURES SCREEN
+// 10. MY SIGNATURES SCREEN (SEARCH & FILTER)
 // ==========================================
-class MySignaturesScreen extends StatelessWidget {
+class MySignaturesScreen extends StatefulWidget {
   const MySignaturesScreen({Key? key}) : super(key: key);
+
+  @override
+  State<MySignaturesScreen> createState() => _MySignaturesScreenState();
+}
+
+class _MySignaturesScreenState extends State<MySignaturesScreen> {
+  String _selectedCategoryFilter = 'All';
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -1682,27 +1711,75 @@ class MySignaturesScreen extends StatelessWidget {
       body: ListenableBuilder(
         listenable: SignatureStore.instance,
         builder: (context, _) {
-          final list = SignatureStore.instance.signatures;
-          if (list.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.folder_open_rounded, size: 64, color: Colors.grey.shade400),
-                  const SizedBox(height: 12),
-                  Text('No signatures saved yet', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
-                ],
-              ),
-            );
+          var list = SignatureStore.instance.signatures;
+
+          if (_selectedCategoryFilter != 'All') {
+            list = list.where((sig) => sig.category == _selectedCategoryFilter).toList();
           }
-          return ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            itemCount: list.length,
-            itemBuilder: (context, index) {
-              final sig = list[index];
-              return _buildSignatureCard(context, sig);
-            },
+          if (_searchQuery.trim().isNotEmpty) {
+            list = list.where((sig) => sig.title.toLowerCase().contains(_searchQuery.trim().toLowerCase())).toList();
+          }
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: TextField(
+                  onChanged: (val) => setState(() => _searchQuery = val),
+                  decoration: InputDecoration(
+                    hintText: 'Search signatures by title...',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: ['All', 'Official', 'Personal', 'Bank', 'Initials'].map((cat) {
+                    final isSelected = _selectedCategoryFilter == cat;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: FilterChip(
+                        label: Text(cat),
+                        selected: isSelected,
+                        selectedColor: const Color(0xFF4F46E5),
+                        labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+                        onSelected: (val) {
+                          if (val) setState(() => _selectedCategoryFilter = cat);
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              Expanded(
+                child: list.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.folder_open_rounded, size: 64, color: Colors.grey.shade400),
+                            const SizedBox(height: 12),
+                            Text('No signatures found', style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        itemCount: list.length,
+                        itemBuilder: (context, index) {
+                          final sig = list[index];
+                          return _buildSignatureCard(context, sig);
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -1756,7 +1833,7 @@ class MySignaturesScreen extends StatelessWidget {
 }
 
 // ==========================================
-// 11. SIGN PDF / IMAGE SCREEN (WITH GALLERY UPLOAD)
+// 11. SIGN PDF / IMAGE SCREEN (STAMP SIMULATOR)
 // ==========================================
 class SignImageScreen extends StatefulWidget {
   const SignImageScreen({Key? key}) : super(key: key);
@@ -1923,7 +2000,7 @@ class _SignImageScreenState extends State<SignImageScreen> {
 }
 
 // ==========================================
-// 12. PREVIEW & EXPORT SCREEN (WITH GALLERY DOWNLOAD)
+// 12. PREVIEW & EXPORT SCREEN
 // ==========================================
 class PreviewScreen extends StatelessWidget {
   final SavedSignature signature;
@@ -1965,7 +2042,6 @@ class PreviewScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Signature Card Display
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(28),
@@ -2002,7 +2078,6 @@ class PreviewScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Export Actions Row
             Row(
               children: [
                 Expanded(
